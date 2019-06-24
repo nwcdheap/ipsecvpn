@@ -33,7 +33,7 @@
 
 AWS Region   | YAML Format
 ------------ | ------------
-宁夏区域 | [![launch-yaml](images/cloudformation-launch-stack-button.png)](https://console.amazonaws.cn/cloudformation/home?region=cn-northwest-1#/stacks/new?stackName=IpsecVPN&templateURL=https://s3.cn-northwest-1.amazonaws.com.cn/seimutig/ipsec.yaml)
+宁夏区域 | [![launch-yaml](images/cloudformation-launch-stack-button.png)](https://console.amazonaws.cn/cloudformation/home?region=cn-northwest-1#/stacks/new?stackName=IpsecVPN&templateURL=https://nwcdlabs-template.s3.cn-northwest-1.amazonaws.com.cn/ipsecvpn/ipsec.yaml)
 
 
 参数说明
@@ -70,7 +70,7 @@ Vpc  | EC2所属VPC  | 下拉选择
 
  AWS Region   | YAML Format
  ------------ | ------------
- 北京区域 | [![launch-yaml](images/cloudformation-launch-stack-button.png)](https://console.amazonaws.cn/cloudformation/home?region=cn-north-1#/stacks/new?stackName=IpsecVPN&templateURL=https://s3.cn-northwest-1.amazonaws.com.cn/seimutig/ipsec.yaml)
+ 北京区域 | [![launch-yaml](images/cloudformation-launch-stack-button.png)](https://console.amazonaws.cn/cloudformation/home?region=cn-north-1#/stacks/new?stackName=IpsecVPN&templateURL=https://nwcdlabs-template.s3.cn-northwest-1.amazonaws.com.cn/ipsecvpn/ipsec.yaml)
 
 
  参数说明
