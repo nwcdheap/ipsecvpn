@@ -129,7 +129,7 @@ Resources:
         Fn::Base64: !Sub
           - |
             #!/bin/bash -xe
-            wget https://s3.cn-northwest-1.amazonaws.com.cn/seimutig/vpnsetup.sh
+            wget https://nwcdlabs-template.s3.cn-northwest-1.amazonaws.com.cn/ipsecvpn/vpnsetup.sh
             /bin/bash ./vpnsetup.sh ${PSK} ${LeftIp} ${RightId} ${RightIp} ${LeftSubnet} ${RightSubnet}
           -
             PSK: !Ref PSK
