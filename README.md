@@ -42,11 +42,10 @@ AWS Region   | YAML Format
 --------  | -------- | -----
 InstanceType | 实例类型 | 下拉选择：t2.micro(测试使用),c4.large(正式使用)
 KeyName | EC2登陆密钥对名称 | 下拉选择
-LeftIp | 本EC2内网地址 |  文本框：EC2私网地址
+LeftIp | 本EC2 EIP |  文本框：本端EC2 EIP
 LeftSubnet | 本端VPC网段地址 | 文本框: 地址网段
 PSK | PreSharedKey | 文本框：字符串
-RightId | 对端ID | 文本框: 此种场景下与RightIP填写一致
-RightIP | 对端IP | 文本框: 对端公网地址
+RightIP | 对端公网IP | 文本框: 对端公网地址
 RightSubnet | 对端网段地址 | 文本框: 地址网段
 SubnetId   | EC2所属子网 | 下拉选择
 Vpc  | EC2所属VPC  | 下拉选择       
@@ -79,11 +78,10 @@ Vpc  | EC2所属VPC  | 下拉选择
  --------  | -------- | -----
 InstanceType | 实例类型 | 下拉选择：t2.micro(测试使用),c4.large(正式使用)
 KeyName | EC2登陆密钥对名称 | 下拉选择
-LeftIp | 本EC2内网地址 |  文本框：EC2私网地址
+LeftIp | 本端EIP |  文本框：本端EIP
 LeftSubnet | 本端VPC网段地址 | 文本框: 地址网段
 PSK | PreSharedKey | 文本框：字符串
-RightId | 对端ID | 文本框: 对端EC2私网地址
-RightIP | 对端IP | 文本框: 对端公网地址
+RightIP | 对端EIP | 文本框: 对端EIP
 RightSubnet | 对端网段地址 | 文本框: 地址网段
 SubnetId   | EC2所属子网 | 下拉选择
 Vpc  | EC2所属VPC  | 下拉选择
@@ -94,9 +92,6 @@ Vpc  | EC2所属VPC  | 下拉选择
 完成后，进行连通性验证。
 
 ## FAQ
-  - 问：为什么方案二中的RightId与RightIp不同？      
-    对端如果也是ec2 instance, 经测试PEER_ID必须为私网地址。具体可参见/var/log/pluto.log进行分析。原因为EC2用private ip做peering.
-
   - 问：我需要更改IKE两个阶段的协商参数怎么办？    
     本模板为简洁起见，固化了协商参数。如需更改，请自行修改vpnsetup.sh文件，并修改ipsec.yaml增加传入参数。具体参数设置可参看man ipsec.conf
 

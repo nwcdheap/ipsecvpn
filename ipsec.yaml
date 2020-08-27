@@ -12,6 +12,7 @@ Parameters:
     AllowedValues:
       - t2.micro
       - c4.large
+      - c5.large     
     ConstraintDescription: must be a valid EC2 instance type.
   VpcId:
     Type: 'AWS::EC2::VPC::Id'
@@ -21,29 +22,21 @@ Parameters:
     Type: 'AWS::EC2::Subnet::Id'
     Description: SubnetId of an existing public subnet in your Virtual Private Cloud (VPC)
     ConstraintDescription: must be an existing public subnet in the selected Virtual Private Cloud.
-
-
-
   PSK:
     Type: String
-
-#  RouteTableId:
-#    Type: String
+    Description: Pre Shared Key
   LeftIp:
     Type: String
+    Description: Left static public ip address 
+  LeftSubnet:
+    Type: String
+    Description: Left EC2 Subnet used for IPSecVPN
   RightIp:
     Type: String
     Description: Peering public ip address
-  RightId:
-    Type: String
-    Description: Peering ip address
-  LeftSubnet:
-    Type: String
   RightSubnet:
     Type: String
-
-
-
+    Description: Peering Subnet used for IPSecVPN
 
 Mappings:
   AWSInstanceType2Arch:
@@ -55,20 +48,15 @@ Mappings:
       Arch: HVM64
   AWSRegionMap:
     cn-north-1: # Beijing (China)
-      HVM64: ami-03ae67ee227d997be
+      HVM64: ami-071e0769a839a3f0d # latest amzn2 ami
+      # HVM64: ami-03ae67ee227d997be
       AWSARN: aws-cn
-      DownloadS3Region: cn-northwest-1
-      S3Domain: amazonaws.com.cn
     cn-northwest-1: # Ningxia (China)
-      HVM64: ami-00d2f9d34d345da04
+      HVM64: ami-0934e7d625575bb7c # latest amzn2 ami
+      # HVM64: ami-00d2f9d34d345da04
       AWSARN: aws-cn
-      DownloadS3Region: cn-northwest-1
-      S3Domain: amazonaws.com.cn
-
-
 
 Resources:
-
   SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -99,8 +87,6 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: 0.0.0.0/0
-
-
   EC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -124,26 +110,75 @@ Resources:
             - Ref: "SecurityGroup"
           SubnetId:
             Ref: "SubnetId"
-          PrivateIpAddress: !Ref LeftIp
       UserData:
         Fn::Base64: !Sub
           - |
             #!/bin/bash -xe
-            wget https://nwcdlabs-template.s3.cn-northwest-1.amazonaws.com.cn/ipsecvpn/vpnsetup.sh
-            /bin/bash ./vpnsetup.sh ${PSK} ${LeftIp} ${RightId} ${RightIp} ${LeftSubnet} ${RightSubnet}
+            yum -y install openswan
+
+            echo "${LeftIp}  ${RightIp} : PSK \"${PSK}\"
+            " > /etc/ipsec.secrets
+
+            echo "config setup
+                plutostderrlog=/tmp/pluto.log
+
+            conn lan-to-lan
+                auto=start #automatically start if detected
+                type=tunnel #tunnel mode/not transport
+
+                ###THIS SIDE###
+                left=%defaultroute
+                leftid=${LeftIp}
+                leftsubnet=${LeftSubnet}
+                leftnexthop=%defaultroute
+
+                ###PEER SIDE###
+                right=${RightIp}
+                rightsubnet=${RightSubnet}
+
+                #phase 1 encryption-integrity-DiffieHellman
+                keyexchange=ike
+                ikev2=yes
+                ike=aes128-sha1;modp1024
+                ikelifetime=86400s
+                authby=secret #use presharedkey
+                rekey=yes  #should we rekey when key lifetime is about to expire
+
+                #phase 2 encryption-pfsgroup
+                phase2=esp #esp for encryption | ah for authentication only
+                #phase2alg=aes192-sha1;modp1024
+                phase2alg=aes256-sha1
+                #phase2alg=aes128-sha1;modp1024
+                pfs=no
+
+                #forceencaps=yes
+                dpddelay=10
+                dpdtimeout=60
+                dpdaction=restart_by_peer
+                salifetime=86400s
+            " > /etc/ipsec.conf
+
+            echo "1" > /proc/sys/net/ipv4/ip_forward
+
+            for F in /proc/sys/net/ipv4/conf/*/accept_redirects; do
+                echo "0" > $F
+            done
+
+            for F in /proc/sys/net/ipv4/conf/*/send_redirects; do
+                echo "0" > $F
+            done
+
+            for F in /proc/sys/net/ipv4/conf/*/rp_filter; do
+                echo "0" > $F
+            done
+
+            systemctl enable ipsec
+            systemctl start ipsec 
+
+            iptables -t mangle -A FORWARD -o eth0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1387
           -
             PSK: !Ref PSK
-            LeftId: !Ref LeftIp
-            RightId: !Ref RightId
+            LeftIp: !Ref LeftIp
             RightIp: !Ref RightIp
             LeftSubnet:  !Ref LeftSubnet
             RightSubnet: !Ref RightSubnet
-
-
-
-  #ROUTE:
-  #  Type: 'AWS::EC2::Route'
-  #  Properties:
-  #    DestinationCidrBlock: !Ref RightSubnet
-  #    InstanceId: !Ref EC2Instance
-  #    RouteTableId: !Ref RouteTableId
